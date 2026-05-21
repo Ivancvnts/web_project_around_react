@@ -1,76 +1,71 @@
-import avatar from "../../images/avatar.jpg";
-import { useState } from "react";
-import Popup from "../Popup/Popup";
-import NewCard from "../NewCard/NewCard";
-import EditProfile from "../EditProfile/EditProfile";
-import EditAvatar from "../EditAvatar/EditAvatar";
-import Card from "../Card/Card";
-import ImagePopup from "../ImagePopup/ImagePopup";
+import { useState, useEffect, useContext } from "react";
+import { CurrentUserContext } from "../../contexts/CurrentUserContext";
+import api from "../../utils/api.js";
 
-const cards = [
-  {
-    isLiked: false,
-    _id: "5d1f0611d321eb4bdcd707dd",
-    name: "Yosemite Valley",
-    link: "https://practicum-content.s3.us-west-1.amazonaws.com/web-code/moved_yosemite.jpg",
-    owner: "5d1f0611d321eb4bdcd707dd",
-    createdAt: "2019-07-05T08:10:57.741Z",
-  },
-  {
-    isLiked: false,
-    _id: "5d1f064ed321eb4bdcd707de",
-    name: "Lake Louise",
-    link: "https://practicum-content.s3.us-west-1.amazonaws.com/web-code/moved_lake-louise.jpg",
-    owner: "5d1f0611d321eb4bdcd707dd",
-    createdAt: "2019-07-05T08:11:58.324Z",
-  },
-];
+import Popup from "./Popup/Popup";
+import NewCard from "./Popup/NewCard/NewCard";
+import EditProfile from "./Popup/EditProfile/EditProfile";
+import EditAvatar from "./Popup/EditAvatar/EditAvatar";
+import Card from "./Card/Card";
+import ImagePopup from "./Popup/ImagePopup/ImagePopup";
 
-function Main() {
-  const [popup, setPopup] = useState(null);
+import defaultAvatar from "../../images/avatar.jpg";
 
-  const newCardPopup = { title: "Nuevo lugar", children: <NewCard /> };
+function Main({
+  cards,
+  setCards,
+  onAddPlaceSubmit,
+  onCardLike,
+  onCardDelete,
+  popup,
+  onPopupOpen,
+  onPopupClose,
+}) {
+  const { currentUser } = useContext(CurrentUserContext);
+
+  const newCardPopup = {
+    title: "Nuevo lugar",
+    children: <NewCard onAddPlaceSubmit={onAddPlaceSubmit} />,
+  };
+
   const editProfilePopup = {
     title: "Editar perfil",
-    children: <EditProfile />,
+    children: <EditProfile onClose={onPopupClose} />,
   };
   const editAvatarPopup = {
     title: "Cambiar foto de perfil",
-    children: <EditAvatar />,
+    children: <EditAvatar onClose={onPopupClose} />,
   };
 
-  function handleOpenPopup(popup) {
-    setPopup(popup);
-  }
-
-  function handleClosePopup() {
-    setPopup(null);
-  }
   return (
     <>
       <main className="content">
         <section className="profile page__section">
           <div
             className="profile__image-container"
-            onClick={() => handleOpenPopup(editAvatarPopup)}
+            onClick={() => onPopupOpen(editAvatarPopup)}
           >
-            <img className="profile__image" src={avatar} alt="Avatar" />
+            <img
+              className="profile__image"
+              src={currentUser.avatar || defaultAvatar}
+              alt="Avatar"
+            />
           </div>
           <div className="profile__info">
-            <h1 className="profile__title">Jacques Cousteau</h1>
+            <h1 className="profile__title">{currentUser.name}</h1>
             <button
               aria-label="Editar perfil"
               className="profile__edit-button"
               type="button"
-              onClick={() => handleOpenPopup(editProfilePopup)}
+              onClick={() => onPopupOpen(editProfilePopup)}
             ></button>
-            <p className="profile__description">Explorador</p>
+            <p className="profile__description">{currentUser.about}</p>
           </div>
           <button
             aria-label="Agregar tarjeta"
             className="profile__add-button"
             type="button"
-            onClick={() => handleOpenPopup(newCardPopup)}
+            onClick={() => onPopupOpen(newCardPopup)}
           ></button>
         </section>
         <section className="cards page__section">
@@ -79,14 +74,16 @@ function Main() {
               <Card
                 key={card._id}
                 card={card}
-                handleOpenPopup={handleOpenPopup}
+                onPopupOpen={onPopupOpen}
+                onCardLike={onCardLike}
+                onCardDelete={onCardDelete}
                 imageComponent={{
                   title: "",
                   children: (
                     <ImagePopup
                       name={card.name}
                       link={card.link}
-                      onClose={handleClosePopup}
+                      onClose={onPopupClose}
                     />
                   ),
                 }}
@@ -95,7 +92,7 @@ function Main() {
           </ul>
         </section>
         {popup && (
-          <Popup onClose={handleClosePopup} title={popup.title}>
+          <Popup onClose={onPopupClose} title={popup.title}>
             {popup.children}
           </Popup>
         )}
